@@ -1,7 +1,11 @@
 #!/usr/bin/python
 #-*- coding: utf-8 -*-
 
-# author tntteam@free.fr
+# Original Author: tntteam@free.fr
+
+# As of version .2 Nick Anderson cloned the script and
+# maintains a git repository. Patches Welcome!
+# https://github.com/nickanderson/check_snmp_extend
 
 ###################################################
 #
