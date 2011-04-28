@@ -137,7 +137,7 @@ def clean_line_output(text):
 ###################################################
 #				
 # check_snmp_extend()
-#	check all SNMP exec
+#	check all SNMP extend
 ###################################################
 def check_snmp_extend():
 	global overall_status, ok_count, not_ok_count
@@ -156,7 +156,7 @@ def check_snmp_extend():
 	if results[0] == timeoutstr:
 		error("No response from: %s. Maybe community is not good ?" % (options.host) )
 	if results[1] == noexecstr:
-		error("No exec/extend snmp found for this server: %s." % (options.host) )
+		error("No extend snmp found for this server: %s." % (options.host) )
 	
 	snmp_request="snmpwalk -v%s -c %s -OQ %s 'NET-SNMP-EXTEND-MIB::nsExtendOutputFull'" % (options.snmp_version, options.community, options.host)
 	outputs=commands.getoutput(snmp_request).split("NET-SNMP-EXTEND-MIB")
@@ -167,7 +167,7 @@ def check_snmp_extend():
 	if results[0] == timeoutstr:
 		error("No response from: %s. Maybe community is not good ?" % (options.host) )
 	if results[1] == noexecstr:
-		error("No exec/extend snmp found for this server: %s." % (options.host) )	
+		error("No extend snmp found for this server: %s." % (options.host) )	
 		
 	for i in range(1,len(results)): #skip 0 as it's empty because of split
 		cleaned_result=clean_line_result(results[i])
@@ -247,7 +247,7 @@ def check_snmp_extend():
 ###################################################
 #				
 # check_this_snmp_extend()
-#	check this SNMP exec (options.exec_name)
+#	check this SNMP extend (options.extend_name)
 ###################################################
 def check_this_snmp_extend():
 	global overall_status
@@ -257,25 +257,25 @@ def check_this_snmp_extend():
 	timeoutstr="Timeout: No Response from " + options.host
 	noexecstr="No Such Instance currently exists at this OID"
 	
-	snmp_request="snmpwalk -v%s -c %s -OQv %s 'NET-SNMP-EXTEND-MIB::nsExtendResult.\"%s\"'" % (options.snmp_version, options.community, options.host, options.exec_name)
+	snmp_request="snmpwalk -v%s -c %s -OQv %s 'NET-SNMP-EXTEND-MIB::nsExtendResult.\"%s\"'" % (options.snmp_version, options.community, options.host, options.extend_name)
 	result=commands.getoutput(snmp_request)
 	if options.debug:
 		debug("snmp request: %s" % (snmp_request))
 		debug(result)
 	
 	if result == noexecstr:
-		error("This exec module is not found for this server: %s" % (options.exec_name) )
+		error("This extend module is not found for this server: %s" %(options.extend_name) )
 	if result == timeoutstr:
 		error("No response from: %s. Maybe community is not good ?" % (options.host) )
 		
-	snmp_request="snmpwalk -v%s -c %s -OQv %s 'NET-SNMP-EXTEND-MIB::nsExtendOutputFull.\"%s\"'" % (options.snmp_version, options.community, options.host, options.exec_name)
+	snmp_request="snmpwalk -v%s -c %s -OQv %s 'NET-SNMP-EXTEND-MIB::nsExtendOutputFull.\"%s\"'" % (options.snmp_version, options.community, options.host, options.extend_name)
 	output=commands.getoutput(snmp_request)
 	if options.debug:
 		debug("snmp request: %s" % (snmp_request))
 		debug(output)
 	
 	if result == noexecstr:
-		error("This exec module is not found for this server: %s" % (options.exec_name) )
+		error("This extend module is not found for this server: %s" %(options.extend_name) )
 	if result == timeoutstr:
 		error("No response from: %s. Maybe community is not good ?" % (options.host) )
 		
@@ -315,7 +315,7 @@ def parse_options():
             return self.epilog
 
     parser = MyParser(usage="usage: %prog [options]", epilog=help_epilog,
-            version="%prog 0.4") 
+            version="%prog 0.5") 
 
     parser.add_option("-d", "--debug", dest="debug",
             action="store_true", default=False,
@@ -346,9 +346,9 @@ def parse_options():
             default="localhost",
             help="Host [default: localhost]")
 
-    parser.add_option("-e", "--exec-name", dest="exec_name",
+    parser.add_option("-e", "--extend-name", dest="extend_name",
             default="ALL",
-            help="SNMP exec name [default: ALL]")
+            help="SNMP extend name [default: ALL]")
 
     parser.add_option("-t", "--timeout", dest="timeout",
             default=10,
@@ -423,7 +423,7 @@ def main():
 ###################################################
 @timeout()
 def do_the_main_stuff():
-	if options.exec_name == 'ALL':
+	if options.extend_name == 'ALL':
 		check_snmp_extend()
 	else:
 		check_this_snmp_extend()
@@ -440,7 +440,7 @@ def end():
 	if overall_status < 0 or overall_status > 3:
 		overall_status = unknown
 	
-	if options.exec_name == 'ALL':
+	if options.extend_name == 'ALL':
 		message = "%s - ok objects: %s, not ok objects: %s - %s" % (state[overall_status], ok_count, not_ok_count, summary)
 		if perfdata != "" and options.output_perfdata:
 			message = "%s | %s" % (message, perfdata)
