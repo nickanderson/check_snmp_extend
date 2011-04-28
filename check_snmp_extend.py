@@ -3,8 +3,9 @@
 
 # Original Author: tntteam@free.fr
 
-# As of version .2 Nick Anderson cloned the script and
-# maintains a git repository. Patches Welcome!
+# As of version .2 Nick Anderson <nick@cmdln.org> 
+# cloned the script and maintains a git repository. 
+# Patches Welcome!
 # https://github.com/nickanderson/check_snmp_extend
 
 ###################################################
@@ -60,19 +61,6 @@ exit_codes = {
 	2	:	state_nagios["WARNING"],
 	3	:	state_nagios["CRITICAL"]
 }
-
-config = {
-	"debug"						:	False,
-	"host"						:	"",
-	"timeout"					:	10,
-	"extend_name"				:	"ALL",
-	"snmp_version"				:	"1",
-	"community"					:	"",
-	"output_longoutput"			:	False,
-	"output_perfdata"			:	False,
-	"output_complete_summary"	:	False
-}
-
 
 summary=""
 long_output=""
@@ -327,7 +315,7 @@ def parse_options():
             return self.epilog
 
     parser = MyParser(usage="usage: %prog [options]", epilog=help_epilog,
-            version="%prog 0.3") 
+            version="%prog 0.4") 
 
     parser.add_option("-d", "--debug", dest="debug",
             action="store_true", default=False,
