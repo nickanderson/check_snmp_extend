@@ -16,6 +16,8 @@
 from sys import exit
 from sys import argv
 import commands, signal
+from optparse import OptionParser
+
 
 
 
@@ -25,7 +27,6 @@ import commands, signal
 #
 ###################################################
 
-version="0.1"
 overall_status = -1
 
 ok=0
@@ -95,7 +96,7 @@ def timeout():
 				raise TimeoutException()
 
 			old_handler = signal.signal(signal.SIGALRM, timeout_handler)
-			signal.alarm(config['timeout']) # triger alarm in timeout_time seconds
+			signal.alarm(options.timeout) # triger alarm in timeout_time seconds
 			try:
 				retval = f()
 			except TimeoutException:
@@ -155,30 +156,30 @@ def check_snmp_extend():
 	
 	output_table={}
 	
-	timeoutstr="Timeout: No Response from " + config['host']
+	timeoutstr="Timeout: No Response from " + options.host
 	noexecstr="::nsExtendResult = No Such Instance currently exists at this OID"
 	
-	snmp_request="snmpwalk -v%s -c %s -OQ %s 'NET-SNMP-EXTEND-MIB::nsExtendResult'" % (config['snmp_version'], config['community'], config['host'])
+	snmp_request="snmpwalk -v%s -c %s -OQ %s 'NET-SNMP-EXTEND-MIB::nsExtendResult'" % (options.snmp_version, options.community, options.host)
 	results=commands.getoutput(snmp_request).split("NET-SNMP-EXTEND-MIB")
-	if config['debug']:
+	if options.debug:
 		debug("snmp request: %s" % (snmp_request))
 		debug(results)
 	
 	if results[0] == timeoutstr:
-		error("No response from: %s. Maybe community is not good ?" % (config['host']) )
+		error("No response from: %s. Maybe community is not good ?" % (options.host) )
 	if results[1] == noexecstr:
-		error("No exec/extend snmp found for this server: %s." % (config['host']) )
+		error("No exec/extend snmp found for this server: %s." % (options.host) )
 	
-	snmp_request="snmpwalk -v%s -c %s -OQ %s 'NET-SNMP-EXTEND-MIB::nsExtendOutputFull'" % (config['snmp_version'], config['community'], config['host'])
+	snmp_request="snmpwalk -v%s -c %s -OQ %s 'NET-SNMP-EXTEND-MIB::nsExtendOutputFull'" % (options.snmp_version, options.community, options.host)
 	outputs=commands.getoutput(snmp_request).split("NET-SNMP-EXTEND-MIB")
-	if config['debug']:
+	if options.debug:
 		debug("snmp request: %s" % (snmp_request))
 		debug(outputs)
 
 	if results[0] == timeoutstr:
-		error("No response from: %s. Maybe community is not good ?" % (config['host']) )
+		error("No response from: %s. Maybe community is not good ?" % (options.host) )
 	if results[1] == noexecstr:
-		error("No exec/extend snmp found for this server: %s." % (config['host']) )	
+		error("No exec/extend snmp found for this server: %s." % (options.host) )	
 		
 	for i in range(1,len(results)): #skip 0 as it's empty because of split
 		cleaned_result=clean_line_result(results[i])
@@ -234,15 +235,15 @@ def check_snmp_extend():
 		else:
 			overall_status = max(overall_status,unknown)
 			
-		if config['output_complete_summary']:
+		if options.output_complete_summary:
 			add_summary("%s=%s, " % (snmp_extend[0],snmp_extend[1]["Summary"]) )
 		else:
 			add_summary("%s=%s, " % (snmp_extend[0],state_nagios_text[snmp_extend[1]["Result"]]) )
 		
-		if snmp_extend[1]["Perfdata"] != "" and config['output_perfdata']:
+		if snmp_extend[1]["Perfdata"] != "" and options.output_perfdata:
 			add_perfdata("%s" % (snmp_extend[1]["Perfdata"]) )
 	
-		if snmp_extend[1]["LongOutput"] != "" and config['output_longoutput']:
+		if snmp_extend[1]["LongOutput"] != "" and options.output_longoutput:
 			add_long_output("%s=%s, " % (snmp_extend[0], snmp_extend[1]["LongOutput"]) )
 	
 		if snmp_extend[1]["Result"] > ok:
@@ -250,7 +251,7 @@ def check_snmp_extend():
 		else:
 			ok_count+=1
 		
-		if config['debug']:
+		if options.debug:
 			debug("extend name: %s, summary: %s, perfdata: %s, longoutput: %s" % (snmp_extend[0], snmp_extend[1]["Summary"], snmp_extend[1]["Perfdata"], snmp_extend[1]["LongOutput"]) )
 
 	
@@ -258,37 +259,37 @@ def check_snmp_extend():
 ###################################################
 #				
 # check_this_snmp_extend()
-#	check this SNMP exec (config['exec_name'])
+#	check this SNMP exec (options.exec_name)
 ###################################################
 def check_this_snmp_extend():
 	global overall_status
 	
 	output_table={}
 	
-	timeoutstr="Timeout: No Response from " + config['host']
+	timeoutstr="Timeout: No Response from " + options.host
 	noexecstr="No Such Instance currently exists at this OID"
 	
-	snmp_request="snmpwalk -v%s -c %s -OQv %s 'NET-SNMP-EXTEND-MIB::nsExtendResult.\"%s\"'" % (config['snmp_version'], config['community'], config['host'], config['exec_name'])
+	snmp_request="snmpwalk -v%s -c %s -OQv %s 'NET-SNMP-EXTEND-MIB::nsExtendResult.\"%s\"'" % (options.snmp_version, options.community, options.host, options.exec_name)
 	result=commands.getoutput(snmp_request)
-	if config['debug']:
+	if options.debug:
 		debug("snmp request: %s" % (snmp_request))
 		debug(result)
 	
 	if result == noexecstr:
-		error("This exec module is not found for this server: %s" % (config['exec_name']) )
+		error("This exec module is not found for this server: %s" % (options.exec_name) )
 	if result == timeoutstr:
-		error("No response from: %s. Maybe community is not good ?" % (config['host']) )
+		error("No response from: %s. Maybe community is not good ?" % (options.host) )
 		
-	snmp_request="snmpwalk -v%s -c %s -OQv %s 'NET-SNMP-EXTEND-MIB::nsExtendOutputFull.\"%s\"'" % (config['snmp_version'], config['community'], config['host'], config['exec_name'])
+	snmp_request="snmpwalk -v%s -c %s -OQv %s 'NET-SNMP-EXTEND-MIB::nsExtendOutputFull.\"%s\"'" % (options.snmp_version, options.community, options.host, options.exec_name)
 	output=commands.getoutput(snmp_request)
-	if config['debug']:
+	if options.debug:
 		debug("snmp request: %s" % (snmp_request))
 		debug(output)
 	
 	if result == noexecstr:
-		error("This exec module is not found for this server: %s" % (config['exec_name']) )
+		error("This exec module is not found for this server: %s" % (options.exec_name) )
 	if result == timeoutstr:
-		error("No response from: %s. Maybe community is not good ?" % (config['host']) )
+		error("No response from: %s. Maybe community is not good ?" % (options.host) )
 		
 	overall_status = int(result)
 
@@ -297,92 +298,77 @@ def check_this_snmp_extend():
 
 
 ###################################################
-#				
-# parse_arguments()	
-#	parse script arguments
+# parse_options()
+#   parse comandline options, set default values
+#   and arguments, construct help
 ###################################################
-def parse_arguments():
-	global config
+def parse_options():
+    help_epilog="""
+    
+    HOW TO ADD A SNMP EXEC (EXTEND) :
+	edit /etc/snmp/snmpd.conf
+	add a line like this :
 	
-	arguments = argv[1:]
-	while len(arguments) > 0:
-		arg = arguments.pop(0)
-		if arg == '--help':
-			print_help()
-			exit(exit_codes[unknown])
-		elif arg == '--debug':
-			config['debug'] = True
-		elif arg == '--output-longoutput':
-			config['output_longoutput'] = True
-		elif arg == '--output-perfdata':
-			config['output_perfdata'] = True
-		elif arg == '--output-complete-summary':
-			config['output_complete_summary'] = True
-		elif arg == '--snmp-version':
-			config['snmp_version'] = arguments.pop(0)
-		elif arg == '--community':
-			config['community'] = arguments.pop(0)
-		elif arg == '--host':
-			config['host'] = arguments.pop(0)
-		elif arg == '--exec-name':
-			config['exec_name'] = arguments.pop(0)			
-		elif arg == '--timeout':
-			config['timeout'] = int(arguments.pop(0))
-		else:
-			error("UNKNOWN ARG %s" % arg)
+	extend yesterday /bin/date --date=yesterday
+	(This should output the current date -1 day)
+	
+	Then restart your snmpd daemon (service snmpd restart)
+	
+	Call this plugin like this to check this snmp extend :
+	%prog --host localhost --snmp-version 2c --community public --name yesterday
+	This should output :
+	Mon Mar 28 11:12:24 CEST 2011
+	(well, you won't get this specific date, but output will be similar...)
 
-	if config['host'] == "" or config['community'] == "" or config['exec_name'] == "":
-		error("Missing mandatory args. Read help. RTFM !")
+    """
+	
+    class MyParser(OptionParser):
+        def format_epilog(self, formatter):
+            return self.epilog
 
-	
-###################################################
-#				
-# print_help()	
-#	print help text
-###################################################
-def print_help():
-	print ""
-	print "check_snmp_extend version %s" % version
-	print "This plugin checks snmp extends (exec)"
-	print ""
-	print "Usage: %s --host hostname --snmp-version snmpversion --community communityname --exec-name exec_name" % argv[0]
-	print "Usage: %s --help" % argv[0]
-	print ""
-	print "--snmp-version: version of snmp to use (only v1 and v2 can be used atm)"
-	print "Should be 1 or 2c"
-	print ""
-	print "--exec-name: name of the snmp exec (extend) to check or ALL to check all available on this host"
-	print ""
-	print "Optional output parameters (works only with ALL mode): "
-	print "--output-complete-summary: instead of output name:STATUS, name:STATUS, it output the complete summary of"
-	print "all exec plugins you specified: name:FULL OUTPUT, name:FULL OUTPUT"
-	print ""
-	print "--output-perfdata: Output perf data (what is after the |)"
-	print ""
-	print "--output-longoutput: Output long outpout (what is after the \\n)"
-	print ""
-	print ""
-	print "Options: "
-	print "--debug : print debug infos"
-	print "--timeout X : timeout the plugin after X seconds (default: 10)"
-	print ""
-	print ""
-	print "HOW TO ADD A SNMP EXEC (EXTEND) :"
-	print "edit /etc/snmp/snmpd.conf"
-	print "add a line like this :"
-	print ""
-	print "exec yesterday /bin/date --date=yesterday"
-	print "(This should output the current date -1 day)"
-	print ""
-	print "Then restart your snmpd daemon (service snmpd restart)"
-	print ""
-	print "Call this plugin like this to check this snmp extend :"
-	print "%s --host localhost --snmpversion 2c --community public --name yesterday"  % argv[0]
-	print "This should output :"
-	print "Mon Mar 28 11:12:24 CEST 2011"
-	print "(well, you won't get this specific date, but output will be similar...)"
-	
-	
+    parser = MyParser(usage="usage: %prog [options]", epilog=help_epilog,
+            version="%prog 0.3") 
+
+    parser.add_option("-d", "--debug", dest="debug",
+            action="store_true", default=False,
+            help="Enable debug output")
+
+    parser.add_option("-l", "--output-longoutput", dest="output_longoutput",
+            action="store_true", default=False,
+            help="Long output format")
+
+    parser.add_option("-p", "--output-perfdata", dest="output_perfdata",
+            action="store_true", default=False,
+            help="Output performance data")
+
+    parser.add_option("-s", "--output-complete-summary",
+            dest="output_complete_summary",
+            action="store_true", default=False,
+            help="Output complete summary")
+
+    parser.add_option("-v", "--snmp-version", dest="snmp_version",
+            default=1,
+            help="SNMP Version")
+
+    parser.add_option("-c", "--community", dest="community",
+            default="public",
+            help="Community string [default: public]")
+
+    parser.add_option("-H", "--host", dest="host",
+            default="localhost",
+            help="Host [default: localhost]")
+
+    parser.add_option("-e", "--exec-name", dest="exec_name",
+            default="ALL",
+            help="SNMP exec name [default: ALL]")
+
+    parser.add_option("-t", "--timeout", dest="timeout",
+            default=10,
+            help="Timeout [default: 10]")
+
+    global options
+    global args
+    (options, args) = parser.parse_args()
 
 ###################################################
 #				
@@ -436,7 +422,7 @@ def add_long_output(text):
 #	main
 ###################################################
 def main():
-	parse_arguments()
+	parse_options()
 
 	do_the_main_stuff()
 
@@ -449,7 +435,7 @@ def main():
 ###################################################
 @timeout()
 def do_the_main_stuff():
-	if config['exec_name'] == 'ALL':
+	if options.exec_name == 'ALL':
 		check_snmp_extend()
 	else:
 		check_this_snmp_extend()
@@ -466,11 +452,11 @@ def end():
 	if overall_status < 0 or overall_status > 3:
 		overall_status = unknown
 	
-	if config['exec_name']=='ALL':
+	if options.exec_name == 'ALL':
 		message = "%s - ok objects: %s, not ok objects: %s - %s" % (state[overall_status], ok_count, not_ok_count, summary)
-		if perfdata != "" and config['output_perfdata']:
+		if perfdata != "" and options.output_perfdata:
 			message = "%s | %s" % (message, perfdata)
-		if long_output != "" and config['output_longoutput']:
+		if long_output != "" and options.output_longoutput:
 			message = "%s \n %s" % (message, long_output)
 		exit_code = exit_codes[overall_status]
 	else:
