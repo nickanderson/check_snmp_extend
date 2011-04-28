@@ -1,0 +1,8 @@
+=================
+check_snmp_extend
+=================
+
+Nagios plugin to check output of exec of extend scripts in snmp 
+by name.
+
+
