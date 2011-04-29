@@ -6,3 +6,45 @@ Nagios plugin to check output of exec of extend scripts in snmp
 by name.
 
 
+Usage::
+
+    Usage: check_snmp_extend.py [options]
+
+    Options:
+      --version             show program's version number and exit
+      -h, --help            show this help message and exit
+      -d, --debug           Enable debug output
+      -l, --output-longoutput
+                            Long output format
+      -p, --output-perfdata
+                            Output performance data
+      -s, --output-complete-summary
+                            Output complete summary
+      -v SNMP_VERSION, --snmp-version=SNMP_VERSION
+                            SNMP Version
+      -c COMMUNITY, --community=COMMUNITY
+                            Community string [default: public]
+      -H HOST, --host=HOST  Host [default: localhost]
+      -e EXTEND_NAME, --extend-name=EXTEND_NAME
+                            SNMP extend name [default: ALL]
+      -t TIMEOUT, --timeout=TIMEOUT
+                            Timeout [default: 10]
+
+        
+        HOW TO ADD A SNMP EXEC (EXTEND) :
+        edit /etc/snmp/snmpd.conf
+        add a line like this :
+        
+        extend yesterday /bin/date --date=yesterday
+        (This should output the current date -1 day)
+        
+        Then restart your snmpd daemon (service snmpd restart)
+        
+        Call this plugin like this to check this snmp extend :
+        %prog --host localhost --snmp-version 2c --community public --name
+        %yesterday
+        This should output :
+        Mon Mar 28 11:12:24 CEST 2011
+        (well, you won't get this specific date, but output will be similar...)
+
+
