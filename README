@@ -41,8 +41,7 @@ Usage::
         Then restart your snmpd daemon (service snmpd restart)
         
         Call this plugin like this to check this snmp extend :
-        %prog --host localhost --snmp-version 2c --community public --name
-        %yesterday
+        %prog --host localhost --snmp-version 2c --community public --extend-name yesterday
         This should output :
         Mon Mar 28 11:12:24 CEST 2011
         (well, you won't get this specific date, but output will be similar...)
