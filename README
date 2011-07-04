@@ -29,6 +29,19 @@ Usage::
                             SNMP extend name [default: ALL]
       -t TIMEOUT, --timeout=TIMEOUT
                             Timeout [default: 10]
+      -u SNMP_USER, --user=SNMP_USER
+                            SNMP username (v3 only)
+      -l SNMP_SECLEVEL, --seclevel=SNMP_SECLEVEL
+                            SNMP Seclevel (noAuthNoPriv|authNoPriv|authPriv, v3
+                            only)
+      -a SNMP_AUTHPROTO, --authproto=SNMP_AUTHPROTO
+                            SNMP Authentication protocol (MD5 or SHA, v3 only)
+      -A SNMP_AUTHPASS, --authpass=SNMP_AUTHPASS
+                            SNMP Authentication password (v3 only)
+      -x SNMP_PRIVPROTO, --privproto=SNMP_PRIVPROTO
+                            SNMP privacy protocol (DES or AES, v3 only)
+      -X SNMP_PRIVPASS, --privpass=SNMP_PRIVPASS
+                            SNMP privacy password (v3 only)
 
         
         HOW TO ADD A SNMP EXEC (EXTEND) :

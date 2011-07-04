@@ -146,8 +146,12 @@ def check_snmp_extend():
 	
 	timeoutstr="Timeout: No Response from " + options.host
 	noexecstr="::nsExtendResult = No Such Instance currently exists at this OID"
+        if options.snmp_version == '3':
+		snmp_request="snmpwalk -v%s -u %s -l %s -a %s -A %s -x %s -X %s -OQ %s 'NET-SNMP-EXTEND-MIB::nsExtendResult'" % (options.snmp_version, options.snmp_user, options.snmp_seclevel, options.snmp_authproto, options.snmp_authpass, options.snmp_privproto, options.snmp_privpass, options.host)
+		exit
+	else:
+		snmp_request="snmpwalk -v%s -c %s -OQ %s 'NET-SNMP-EXTEND-MIB::nsExtendResult'" % (options.snmp_version, options.community, options.host)
 	
-	snmp_request="snmpwalk -v%s -c %s -OQ %s 'NET-SNMP-EXTEND-MIB::nsExtendResult'" % (options.snmp_version, options.community, options.host)
 	results=commands.getoutput(snmp_request).split("NET-SNMP-EXTEND-MIB")
 	if options.debug:
 		debug("snmp request: %s" % (snmp_request))
@@ -158,7 +162,12 @@ def check_snmp_extend():
 	if results[1] == noexecstr:
 		error("No extend snmp found for this server: %s." % (options.host) )
 	
-	snmp_request="snmpwalk -v%s -c %s -OQ %s 'NET-SNMP-EXTEND-MIB::nsExtendOutputFull'" % (options.snmp_version, options.community, options.host)
+	if options.snmp_version == '3':
+		snmp_request="snmpwalk -v%s -u %s -l %s -a %s -A %s -x %s -X %s -OQ %s 'NET-SNMP-EXTEND-MIB::nsExtendOutputFull'" % (options.snmp_version, options.snmp_user, options.snmp_seclevel, options.snmp_authproto, options.snmp_authpass, options.snmp_privproto, options.snmp_privpass, options.host)
+		exit
+	else:
+		snmp_request="snmpwalk -v%s -c %s -OQ %s 'NET-SNMP-EXTEND-MIB::nsExtendOutputFull'" % (options.snmp_version, options.community, options.host)
+
 	outputs=commands.getoutput(snmp_request).split("NET-SNMP-EXTEND-MIB")
 	if options.debug:
 		debug("snmp request: %s" % (snmp_request))
@@ -256,8 +265,12 @@ def check_this_snmp_extend():
 	
 	timeoutstr="Timeout: No Response from " + options.host
 	noexecstr="No Such Instance currently exists at this OID"
-	
-	snmp_request="snmpwalk -v%s -c %s -OQv %s 'NET-SNMP-EXTEND-MIB::nsExtendResult.\"%s\"'" % (options.snmp_version, options.community, options.host, options.extend_name)
+
+	if options.snmp_version == '3':
+		snmp_request="snmpwalk -v%s -u %s -l %s -a %s -A %s -x %s -X %s -OQv %s 'NET-SNMP-EXTEND-MIB::nsExtendResult.\"%s\"'" % (options.snmp_version, options.snmp_user, options.snmp_seclevel, options.snmp_authproto, options.snmp_authpass, options.snmp_privproto, options.snmp_privpass, options.host, options.extend_name)
+	else:
+		snmp_request="snmpwalk -v%s -c %s -OQv %s 'NET-SNMP-EXTEND-MIB::nsExtendResult.\"%s\"'" % (options.snmp_version, options.community, options.host, options.extend_name)
+
 	result=commands.getoutput(snmp_request)
 	if options.debug:
 		debug("snmp request: %s" % (snmp_request))
@@ -268,7 +281,11 @@ def check_this_snmp_extend():
 	if result == timeoutstr:
 		error("No response from: %s. Maybe community is not good ?" % (options.host) )
 		
-	snmp_request="snmpwalk -v%s -c %s -OQv %s 'NET-SNMP-EXTEND-MIB::nsExtendOutputFull.\"%s\"'" % (options.snmp_version, options.community, options.host, options.extend_name)
+	if options.snmp_version == '3':
+		snmp_request="snmpwalk -v%s -u %s -l %s -a %s -A %s -x %s -X %s -OQv %s 'NET-SNMP-EXTEND-MIB::nsExtendOutputFull.\"%s\"'" % (options.snmp_version, options.snmp_user, options.snmp_seclevel, options.snmp_authproto, options.snmp_authpass, options.snmp_privproto, options.snmp_privpass, options.host, options.extend_name)
+	else:
+		snmp_request="snmpwalk -v%s -c %s -OQv %s 'NET-SNMP-EXTEND-MIB::nsExtendOutputFull.\"%s\"'" % (options.snmp_version, options.community, options.host, options.extend_name)
+
 	output=commands.getoutput(snmp_request)
 	if options.debug:
 		debug("snmp request: %s" % (snmp_request))
@@ -303,7 +320,7 @@ def parse_options():
 	Then restart your snmpd daemon (service snmpd restart)
 	
 	Call this plugin like this to check this snmp extend :
-	%prog --host localhost --snmp-version 2c --community public --name yesterday
+	%prog --host localhost --snmp-version 2c --community public --extend-name yesterday
 	This should output :
 	Mon Mar 28 11:12:24 CEST 2011
 	(well, you won't get this specific date, but output will be similar...)
@@ -313,7 +330,7 @@ def parse_options():
     class MyParser(OptionParser):
         def format_epilog(self, formatter):
             return self.epilog
-
+    
     parser = MyParser(usage="usage: %prog [options]", epilog=help_epilog,
             version="%prog 0.5") 
 
@@ -321,7 +338,7 @@ def parse_options():
             action="store_true", default=False,
             help="Enable debug output")
 
-    parser.add_option("-l", "--output-longoutput", dest="output_longoutput",
+    parser.add_option("-L", "--output-longoutput", dest="output_longoutput",
             action="store_true", default=False,
             help="Long output format")
 
@@ -353,6 +370,25 @@ def parse_options():
     parser.add_option("-t", "--timeout", dest="timeout",
             default=10,
             help="Timeout [default: 10]")
+    
+    parser.add_option("-u", "--user", dest="snmp_user",
+            help="SNMP username (v3 only)")
+    
+    parser.add_option("-l", "--seclevel", dest="snmp_seclevel",
+            help="SNMP Seclevel (noAuthNoPriv|authNoPriv|authPriv, v3 only)")
+
+    parser.add_option("-a", "--authproto", dest="snmp_authproto",
+            help="SNMP Authentication protocol (MD5 or SHA, v3 only)")
+    
+    parser.add_option("-A", "--authpass", dest="snmp_authpass",
+            help="SNMP Authentication password (v3 only)")
+
+    parser.add_option("-x", "--privproto", dest="snmp_privproto",
+            help="SNMP privacy protocol (DES or AES, v3 only)")
+
+    parser.add_option("-X", "--privpass", dest="snmp_privpass",
+            help="SNMP privacy password (v3 only)")
+    
 
     global options
     global args
