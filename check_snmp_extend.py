@@ -148,7 +148,6 @@ def check_snmp_extend():
 	noexecstr="::nsExtendResult = No Such Instance currently exists at this OID"
         if options.snmp_version == '3':
 		snmp_request="snmpwalk -v%s -u %s -l %s -a %s -A %s -x %s -X %s -OQ %s 'NET-SNMP-EXTEND-MIB::nsExtendResult'" % (options.snmp_version, options.snmp_user, options.snmp_seclevel, options.snmp_authproto, options.snmp_authpass, options.snmp_privproto, options.snmp_privpass, options.host)
-		exit
 	else:
 		snmp_request="snmpwalk -v%s -c %s -OQ %s 'NET-SNMP-EXTEND-MIB::nsExtendResult'" % (options.snmp_version, options.community, options.host)
 	
@@ -164,7 +163,6 @@ def check_snmp_extend():
 	
 	if options.snmp_version == '3':
 		snmp_request="snmpwalk -v%s -u %s -l %s -a %s -A %s -x %s -X %s -OQ %s 'NET-SNMP-EXTEND-MIB::nsExtendOutputFull'" % (options.snmp_version, options.snmp_user, options.snmp_seclevel, options.snmp_authproto, options.snmp_authpass, options.snmp_privproto, options.snmp_privpass, options.host)
-		exit
 	else:
 		snmp_request="snmpwalk -v%s -c %s -OQ %s 'NET-SNMP-EXTEND-MIB::nsExtendOutputFull'" % (options.snmp_version, options.community, options.host)
 
